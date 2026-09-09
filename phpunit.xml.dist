@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Unit tests only. Integration tests live in Test/Integration and are run by the site-level
+    phpunit config once this module is installed into a Magento project, because Magento's
+    integration framework (dev/tests/integration) does not exist in a standalone module repo.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         failOnWarning="true"
+         failOnNotice="true"
+         failOnDeprecation="true">
+    <testsuites>
+        <testsuite name="Edmonds Commerce Unit Tests">
+            <directory>Test/Unit</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>.</directory>
+        </include>
+        <exclude>
+            <directory>vendor</directory>
+            <directory>Test</directory>
+        </exclude>
+    </source>
+</phpunit>

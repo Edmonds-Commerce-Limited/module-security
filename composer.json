@@ -1,0 +1,54 @@
+{
+    "name": "edmondscommerce/module-security",
+    "description": "Helps to harden Magento 2 security by disabling certain features",
+    "type": "magento2-module",
+    "keywords": [
+        "magento",
+        "magento2",
+        "magento-module",
+        "security",
+        "hardening"
+    ],
+    "homepage": "https://github.com/Edmonds-Commerce-Limited/magento2-security",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Edmonds Commerce",
+            "email": "info@edmondscommerce.co.uk",
+            "homepage": "https://www.edmondscommerce.co.uk"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+        "magento/framework": "^103.0.7"
+    },
+    "require-dev": {
+        "bitexpert/phpstan-magento": "^0.43",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "magento/magento-coding-standard": "^41.0",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^10.5 || ^11.0"
+    },
+    "repositories": {
+        "mage-os-mirror": {
+            "type": "composer",
+            "url": "https://mirror.mage-os.org/"
+        }
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "EdmondsCommerce\\Security\\": ""
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "magento/*": true
+        },
+        "sort-packages": true
+    }
+}

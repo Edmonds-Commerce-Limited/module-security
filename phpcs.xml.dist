@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<ruleset name="EdmondsCommerce_Security">
+    <description>Stock Magento2 coding standard, no exclusions.</description>
+
+    <file>.</file>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+
+    <arg name="extensions" value="php,phtml,xml"/>
+    <arg name="tab-width" value="4"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+
+    <rule ref="Magento2"/>
+</ruleset>
