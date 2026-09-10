@@ -40,7 +40,7 @@ jobs:
         run: composer validate --strict
 
       - name: Install dependencies
-        uses: ramsey/composer-install@v3
+        uses: ramsey/composer-install@v4
 
       # composer.lock is not committed, so each leg resolves independently and PHP 8.2 ends up on a
       # different magento/framework than 8.4. Print it so that difference is visible, not silent.
