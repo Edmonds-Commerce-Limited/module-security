@@ -4,14 +4,20 @@ on:
   push:
     branches: ['*']
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   qa:
     name: QA (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -25,7 +31,8 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           # magento/framework declares all of these as hard requirements
-          extensions: bcmath, dom, gd, intl, mbstring, simplexml, soap, sockets, xsl, zip
+          extensions: bcmath, curl, dom, ftp, gd, hash, iconv, intl, mbstring, openssl, simplexml, sodium, xsl, zip
+          ini-values: memory_limit=-1
           coverage: none
           tools: none
 
@@ -35,5 +42,20 @@ jobs:
       - name: Install dependencies
         uses: ramsey/composer-install@v3
 
-      - name: Run QA suite
-        run: ./bin/qa.bash
+      # composer.lock is not committed, so each leg resolves independently and PHP 8.2 ends up on a
+      # different magento/framework than 8.4. Print it so that difference is visible, not silent.
+      - name: Show resolved Magento version
+        run: composer show magento/framework | head -n 3
+
+      - name: Coding standard
+        run: vendor/bin/phpcs
+
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=-1
+
+      # Fails when any rule in rector.php still has something to change
+      - name: Rector
+        run: vendor/bin/rector process --dry-run --no-progress-bar
+
+      - name: Unit tests
+        run: vendor/bin/phpunit

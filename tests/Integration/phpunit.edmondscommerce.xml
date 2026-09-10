@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Integration test configuration for EdmondsCommerce_Security.
+
+    Derived from Magento 2.4.8 dev/tests/integration/phpunit.xml.dist. Every path and TESTS_* file
+    constant below is resolved relative to the file's own directory, so this MUST be copied into
+    <magento-root>/dev/tests/integration/ before use. bin/sandbox.bash does that for you.
+
+    Core's own suite globs app/code/*/*/Test/Integration and never vendor/, which is why a module
+    installed by composer needs this file at all. Both globs are listed so one file works whether
+    the module is composer-installed or sat in app/code; a glob matching nothing is skipped
+    silently because TestSuiteMapper only existence-checks paths without a wildcard.
+
+    The module must never be in BOTH locations at once - ComponentRegistrar::register() throws
+    LogicException on a duplicate module name and Magento will not boot.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.4/phpunit.xsd"
+         colors="true"
+         columns="max"
+         beStrictAboutTestsThatDoNotTestAnything="false"
+         failOnEmptyTestSuite="true"
+         bootstrap="./framework/bootstrap.php"
+         stderr="true">
+    <testsuites>
+        <testsuite name="Edmonds Commerce Integration Tests">
+            <directory suffix="Test.php">../../../app/code/EdmondsCommerce/*/tests/Integration</directory>
+            <directory suffix="Test.php">../../../vendor/edmondscommerce/*/tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <includePath>.</includePath>
+        <includePath>testsuite</includePath>
+        <ini name="date.timezone" value="Europe/London"/>
+        <ini name="xdebug.max_nesting_level" value="200"/>
+        <const name="TESTS_INSTALL_CONFIG_FILE" value="etc/install-config-mysql.php"/>
+        <const name="TESTS_POST_INSTALL_SETUP_COMMAND_CONFIG_FILE" value="etc/post-install-setup-command-config.php"/>
+        <const name="TESTS_GLOBAL_CONFIG_FILE" value="etc/config-global.php"/>
+        <const name="TESTS_GLOBAL_CONFIG_DIR" value="../../../app/etc"/>
+        <!-- 'enabled' forces setup:uninstall plus a full reinstall on every run. The
+             m2-integration ddev command flips this on for a clean run; the default keeps the
+             dev loop usable. -->
+        <const name="TESTS_CLEANUP" value="disabled"/>
+        <const name="TESTS_MEM_LEAK_LIMIT" value=""/>
+        <const name="TESTS_EXTRA_VERBOSE_LOG" value="1"/>
+        <const name="TESTS_MAGENTO_MODE" value="developer"/>
+        <const name="TESTS_ERROR_LOG_LISTENER_LEVEL" value="-1"/>
+        <const name="USE_OVERRIDE_CONFIG" value="enabled"/>
+    </php>
+    <extensions>
+        <!-- Drives @magentoDbIsolation, @magentoAppIsolation and @magentoDataFixture. Without it
+             those annotations are silently inert. Core's Allure bootstrap is deliberately omitted. -->
+        <bootstrap class="Magento\TestFramework\Event\Subscribers"/>
+    </extensions>
+</phpunit>

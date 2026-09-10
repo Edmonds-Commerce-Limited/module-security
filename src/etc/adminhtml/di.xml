@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Disable mitigations in admin area as opposed to declaring the changes multiple times -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Catalog\Model\Product\Option\Type\File\ValidatorFile">
+        <plugin name="EdmondsCommerce_Security::block_custom_option_file_upload" disabled="true"/>
+    </type>
+    <type name="Magento\Catalog\Model\Webapi\Product\Option\Type\File\Processor">
+        <plugin name="EdmondsCommerce_Security::block_custom_option_file_upload_via_webapi" disabled="true"/>
+    </type>
+</config>

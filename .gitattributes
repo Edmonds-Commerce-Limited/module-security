@@ -1,5 +1,5 @@
 # Keep the Composer dist tarball to just what a Magento install needs
-/Test               export-ignore
+/tests              export-ignore
 /bin                export-ignore
 /.github            export-ignore
 /.editorconfig      export-ignore
@@ -8,4 +8,6 @@
 /phpcs.xml.dist     export-ignore
 /phpstan.neon.dist  export-ignore
 /phpunit.xml.dist   export-ignore
+/rector             export-ignore
+/rector.php         export-ignore
 /CONTRIBUTING.md    export-ignore

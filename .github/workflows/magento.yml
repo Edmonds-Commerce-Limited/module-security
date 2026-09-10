@@ -1,0 +1,186 @@
+name: Magento
+
+# Exercises the module inside a real Magento install: DI compilation, then unit and integration
+# tests run by Magento's own test frameworks.
+#
+# Magento is built from the mage-os mirror rather than a prebuilt image, so no Adobe credentials are
+# needed by CI or by outside contributors, and every step of the build is visible in this file.
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+  schedule:
+    # Weekly, so an upstream Magento patch release that breaks us surfaces without a commit here.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: magento-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAGENTO_REPOSITORY: https://mirror.mage-os.org/
+  COMPOSER_NAME: edmondscommerce/module-security
+  MAGENTO_MODULE: EdmondsCommerce_Security
+  COMPOSER_MEMORY_LIMIT: -1
+
+jobs:
+  magento:
+    name: Magento ${{ matrix.magento }} (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        # Paired, not crossed: 2.4.7 is PHP 8.1-8.3, 2.4.8 is 8.2-8.4, 2.4.9 is 8.3-8.5.
+        include:
+          - magento: '2.4.7-p10'
+            php: '8.3'
+          - magento: '2.4.8-p5'
+            php: '8.4'
+          - magento: '2.4.9'
+            php: '8.4'
+
+    services:
+      db:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: magento
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=30
+
+      opensearch:
+        image: opensearchproject/opensearch:2.19.3
+        env:
+          discovery.type: single-node
+          DISABLE_SECURITY_PLUGIN: 'true'
+          DISABLE_INSTALL_DEMO_CONFIG: 'true'
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx1024m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd="curl -sf http://localhost:9200 || exit 1"
+          --health-interval=10s --health-timeout=5s --health-retries=30
+
+    steps:
+      - name: Checkout module
+        uses: actions/checkout@v4
+        with:
+          path: package-source
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: bcmath, curl, dom, ftp, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
+          ini-values: memory_limit=-1
+          coverage: none
+          tools: none
+
+      - name: Install the MySQL client
+        # Magento\TestFramework\Db\Mysql shells out to mysql and mysqldump for the dump/restore that
+        # backs test isolation. GitHub runners do not ship them.
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends mariadb-client
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ matrix.magento }}-php${{ matrix.php }}-${{ github.run_id }}
+          restore-keys: |
+            composer-${{ matrix.magento }}-php${{ matrix.php }}-
+            composer-${{ matrix.magento }}-
+
+      - name: Create the Magento project
+        run: |
+          composer create-project \
+            --repository="${MAGENTO_REPOSITORY}" \
+            --no-install --no-progress --no-plugins \
+            magento/project-community-edition magento "${{ matrix.magento }}"
+
+      - name: Repoint composer at the mirror and add this checkout
+        working-directory: magento
+        run: |
+          # The skeleton ships repo.magento.com, which needs Adobe keys we deliberately do not have.
+          composer config --unset repositories || true
+          composer config --unset repo.0 || true
+          composer config repositories.mage-os composer "${MAGENTO_REPOSITORY}"
+          composer config repositories.local-source path ../package-source
+          composer config --no-plugins allow-plugins true
+          composer require --no-update --no-interaction "${COMPOSER_NAME}:@dev"
+
+      - name: Install
+        working-directory: magento
+        # Not --no-dev: the unit and integration runs need the Magento root's vendor/bin/phpunit.
+        run: composer install --no-interaction --no-progress
+
+      - name: Assert the module landed with its tests
+        run: |
+          test -d magento/vendor/edmondscommerce/module-security/tests/Integration \
+            || { echo "::error::tests/Integration is missing from the installed module"; exit 1; }
+
+      # Needs no database: DiCompileCommand::checkEnvironment() only wants app/etc/config.php,
+      # which module:enable writes.
+      - name: DI compile
+        working-directory: magento
+        run: |
+          php bin/magento module:enable --all
+          php bin/magento module:status "${MAGENTO_MODULE}" | tee /tmp/module-status.txt
+          grep -qi 'enabled' /tmp/module-status.txt
+          php bin/magento setup:di:compile
+
+      - name: Unit tests
+        working-directory: magento/dev/tests/unit
+        # Core's dist config only globs Test/Unit, so the path argument is what picks up our tests, and
+        # it keeps the run to ours instead of core's whole suite.
+        run: php ../../../vendor/bin/phpunit "../../../vendor/${COMPOSER_NAME}/tests/Unit"
+
+      - name: Install the integration test configuration
+        run: |
+          cp package-source/bin/sandbox/install-config-mysql.php \
+             magento/dev/tests/integration/etc/install-config-mysql.php
+          cp package-source/tests/Integration/phpunit.edmondscommerce.xml \
+             magento/dev/tests/integration/
+
+      - name: Integration tests
+        working-directory: magento/dev/tests/integration
+        env:
+          MAGENTO_DB_HOST: 127.0.0.1
+          MAGENTO_DB_USER: root
+          MAGENTO_DB_PASSWORD: magento
+          MAGENTO_DB_NAME: magento_integration_tests
+          MAGENTO_SEARCH_ENGINE: opensearch
+          MAGENTO_SEARCH_HOST: 127.0.0.1
+          MAGENTO_SEARCH_PORT: '9200'
+        run: |
+          # The framework installs its own Magento with every module enabled but resolves DI through
+          # Factory\Compiled, so the compiled DI left by the di:compile step above must not be
+          # reused - it is regenerated during the test install.
+          rm -rf ../../../generated/code ../../../generated/metadata
+          # The framework installs Magento itself, but will not create the schema.
+          mariadb -h 127.0.0.1 -uroot -pmagento \
+            -e "CREATE DATABASE IF NOT EXISTS magento_integration_tests \
+                CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+          # A fresh database every run, so the install must actually happen.
+          sed -i 's|name="TESTS_CLEANUP" value="disabled"|name="TESTS_CLEANUP" value="enabled"|' \
+            phpunit.edmondscommerce.xml
+          php ../../../vendor/bin/phpunit -c phpunit.edmondscommerce.xml
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: magento-logs-${{ matrix.magento }}
+          path: |
+            magento/var/log/
+            magento/var/report/
+            magento/dev/tests/integration/tmp/**/var/log/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,14 +1,20 @@
 <?xml version="1.0"?>
 <ruleset name="EdmondsCommerce_Security">
-    <description>Stock Magento2 coding standard, no exclusions.</description>
+    <description>Magento2 coding standard, minus mandatory method docblocks. Only vendor and sandbox tooling are excluded.</description>
 
     <file>.</file>
     <exclude-pattern>*/vendor/*</exclude-pattern>
+    <!-- Sandbox tooling and core-derived test config, not module code -->
+    <exclude-pattern>*/bin/*</exclude-pattern>
 
     <arg name="extensions" value="php,phtml,xml"/>
     <arg name="tab-width" value="4"/>
     <arg name="colors"/>
     <arg value="sp"/>
 
-    <rule ref="Magento2"/>
+    <rule ref="Magento2">
+        <!-- Method docblocks are optional: native types already say it, and PHPStan checks any tags written -->
+        <exclude name="Magento2.Annotation.MethodAnnotationStructure"/>
+        <exclude name="Magento2.Annotation.MethodArguments"/>
+    </rule>
 </ruleset>

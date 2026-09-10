@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="edmondscommerce" translate="label" sortOrder="900">
+            <label>Edmonds Commerce</label>
+        </tab>
+        <section id="edmondscommerce_security" translate="label" type="text" sortOrder="10"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Security</label>
+            <tab>edmondscommerce</tab>
+            <resource>EdmondsCommerce_Security::config</resource>
+            <group id="custom_options" translate="label" type="text" sortOrder="10"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Custom Options</label>
+                <field id="disable_file_upload" translate="label comment" type="select" sortOrder="10"
+                       canRestore="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Disable Customer File Uploads</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Blocks files being uploaded against a product custom option of type File, on the storefront and through the Web API. Magento's extension check on this route allows any extension unless the option defines an allow list, so leaving it enabled lets customers write files of their choosing into pub/media. Admin order creation is unaffected.]]></comment>
+                </field>
+            </group>
+            <group id="customer_address" translate="label" type="text" sortOrder="20"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Customer Addresses</label>
+                <field id="disable_file_upload" translate="label comment" type="select" sortOrder="10"
+                       canRestore="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Disable Customer Address File Uploads</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Blocks the storefront upload for file and image customer address attributes (customer/address_file/upload). It needs no login and writes the file into pub/media, which is the file-write half of the SessionReaper attack (CVE-2025-54236). Only switch this off if the storefront address form has a file or image attribute. Admin uploads are unaffected.]]></comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

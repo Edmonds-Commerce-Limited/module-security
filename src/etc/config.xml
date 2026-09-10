@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <edmondscommerce_security>
+            <custom_options>
+                <disable_file_upload>1</disable_file_upload>
+            </custom_options>
+            <customer_address>
+                <disable_file_upload>1</disable_file_upload>
+            </customer_address>
+        </edmondscommerce_security>
+    </default>
+</config>

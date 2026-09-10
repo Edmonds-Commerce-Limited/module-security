@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <type name="Magento\Catalog\Model\Product\Option\Type\File\ValidatorFile">
+        <plugin name="EdmondsCommerce_Security::block_custom_option_file_upload"
+                type="EdmondsCommerce\Security\Plugin\Catalog\BlockCustomOptionFileUpload"
+                sortOrder="10"/>
+    </type>
+
+    <type name="Magento\Catalog\Model\Webapi\Product\Option\Type\File\Processor">
+        <plugin name="EdmondsCommerce_Security::block_custom_option_file_upload_via_webapi"
+                type="EdmondsCommerce\Security\Plugin\Catalog\BlockCustomOptionFileUploadViaWebApi"
+                sortOrder="10"/>
+    </type>
+
+    <type name="Magento\Customer\Controller\Address\File\Upload">
+        <plugin name="EdmondsCommerce_Security::block_customer_address_file_upload"
+                type="EdmondsCommerce\Security\Plugin\Customer\BlockAddressFileUpload"
+                sortOrder="10"/>
+    </type>
+
+    <!-- One file for every blocked attempt; the logger has no other handler, so none reach system.log -->
+    <virtualType name="EdmondsCommerce\Security\Logger\Handler" type="Magento\Framework\Logger\Handler\Base">
+        <arguments>
+            <argument name="fileName" xsi:type="const">EdmondsCommerce\Security\Model\Log\AttackLogger::LOG_FILE</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="EdmondsCommerce\Security\Logger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="name" xsi:type="string">edmondscommerce_security</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="attack" xsi:type="object">EdmondsCommerce\Security\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="EdmondsCommerce\Security\Model\AttackLogger">
+        <arguments>
+            <argument name="logger" xsi:type="object">EdmondsCommerce\Security\Logger</argument>
+        </arguments>
+    </type>
+</config>

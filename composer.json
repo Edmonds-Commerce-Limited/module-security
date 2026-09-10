@@ -7,9 +7,11 @@
         "magento2",
         "magento-module",
         "security",
-        "hardening"
+        "hardening",
+        "polyshell",
+        "sessionreaper"
     ],
-    "homepage": "https://github.com/Edmonds-Commerce-Limited/magento2-security",
+    "homepage": "https://github.com/Edmonds-Commerce-Limited/module-security",
     "license": "MIT",
     "authors": [
         {
@@ -21,33 +23,57 @@
     "minimum-stability": "stable",
     "require": {
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
-        "magento/framework": "^103.0.7"
+        "magento/framework": "^103.0.7",
+        "magento/module-catalog": "^104.0.7",
+        "magento/module-customer": "^103.0.7",
+        "magento/module-store": "^101.1.7"
     },
     "require-dev": {
         "bitexpert/phpstan-magento": "^0.43",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "magento/magento-coding-standard": "^41.0",
+        "magento/magento2-base": "^2.4.7",
         "phpstan/phpstan": "^2.0",
-        "phpunit/phpunit": "^10.5 || ^11.0"
+        "phpunit/phpunit": "^10.5 || ^11.0",
+        "rector/rector": "^2.6"
     },
     "repositories": {
         "mage-os-mirror": {
             "type": "composer",
-            "url": "https://mirror.mage-os.org/"
+            "url": "https://mirror.mage-os.org/",
+            "exclude": [
+                "magento/magento-composer-installer"
+            ]
         }
     },
     "autoload": {
         "files": [
-            "registration.php"
+            "src/registration.php"
         ],
         "psr-4": {
-            "EdmondsCommerce\\Security\\": ""
+            "EdmondsCommerce\\Security\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "EdmondsCommerce\\Security\\Rector\\": "rector/",
+            "EdmondsCommerce\\Security\\Test\\": "tests/",
+            "Magento\\TestFramework\\": "vendor/magento/magento2-base/dev/tests/integration/framework/Magento/TestFramework/"
+        }
+    },
+    "scripts": {
+        "urn-catalog": "@php bin/urn-catalog.php",
+        "post-install-cmd": "@urn-catalog",
+        "post-update-cmd": "@urn-catalog"
+    },
+    "scripts-descriptions": {
+        "urn-catalog": "Map Magento's urn:magento:* XML schemas for PhpStorm in .idea/misc.xml"
     },
     "config": {
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
-            "magento/*": true
+            "magento/composer-dependency-version-audit-plugin": true,
+            "magento/magento-composer-installer": false
         },
         "sort-packages": true
     }
