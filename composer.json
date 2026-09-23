@@ -29,7 +29,7 @@
         "magento/module-store": "^101.1.7"
     },
     "require-dev": {
-        "bitexpert/phpstan-magento": "^0.43",
+        "bitexpert/phpstan-magento": "^0.44",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "magento/magento-coding-standard": "^41.0",
         "magento/magento2-base": "^2.4.7",
