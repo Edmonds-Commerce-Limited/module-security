@@ -34,7 +34,7 @@
         "magento/magento-coding-standard": "^41.0",
         "magento/magento2-base": "^2.4.7",
         "phpstan/phpstan": "^2.0",
-        "phpunit/phpunit": "^10.5 || ^11.0",
+        "phpunit/phpunit": "^13.4.6",
         "rector/rector": "^2.6"
     },
     "repositories": {
